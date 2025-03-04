@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
+  email      String   @unique
+  password   String
+  image      String?
+  bio        String?
+  is_active  Boolean?
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  // Quan hệ với Article
+  articles Article[]
+
+  // Quan hệ với Follower
+  followers Follower[] @relation("UserFollowers")
+  following Follower[] @relation("UserFollowing")
+
+  // Quan hệ với Favorite
+  favorites Favorite[]
+
+  // Quan hệ với Comment
+  comments Comment[]
+}
+
+model Tag {
+  id         Int      @id @default(autoincrement())
+  title      String   @unique
+  is_active  Boolean
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  // Quan hệ với Article_Tag
+  articleTags Article_Tag[]
+}
+
+model Article {
+  id          Int           @id @default(autoincrement())
+  slug        String        @unique
+  title       String
+  description String
+  body        String // 🔥 Thêm dòng này
+  total_like  String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  authorId    Int
+  author      User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags        Article_Tag[]
+  favorites   Favorite[]
+  comments    Comment[]
+}
+
+model Article_Tag {
+  article   Article @relation(fields: [articleId], references: [id])
+  articleId Int
+  tag       Tag     @relation(fields: [tagId], references: [id])
+  tagId     Int
+
+  @@id([articleId, tagId]) // Composite Primary Key
+}
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  article_id Int
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  // Khóa ngoại
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [article_id], references: [id], onDelete: Cascade)
+}
+
+model Follower {
+  id           Int      @id @default(autoincrement())
+  user_id      Int
+  following_id Int
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
+
+  // Khóa ngoại
+  follower  User @relation("UserFollowers", fields: [user_id], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowing", fields: [following_id], references: [id], onDelete: Cascade)
+}
+
+model Comment {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  article_id Int
+  content    String
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now())
+
+  // Khóa ngoại
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [article_id], references: [id], onDelete: Cascade)
+}

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json.schemastore.org/nest-cli",
+  "collection": "@nestjs/schematics",
+  "sourceRoot": "apps/main-service/src",
+  "compilerOptions": {
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/main-service/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/main-service",
+  "projects": {
+    "@apps/main-service": {
+      "type": "application",
+      "root": "apps/main-service",
+      "entryFile": "main",
+      "sourceRoot": "apps/main-service/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/main-service/tsconfig.app.json"
+      }
+    },
+    "@nnpp/decorators": {
+      "type": "library",
+      "root": "libs/decorators",
+      "entryFile": "index",
+      "sourceRoot": "libs/decorators/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/decorators/tsconfig.lib.json"
+      }
+    },
+    "@nnpp/setup": {
+      "type": "library",
+      "root": "libs/setup",
+      "entryFile": "index",
+      "sourceRoot": "libs/setup/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/setup/tsconfig.lib.json"
+      }
+    },
+    "@nnpp/interceptors": {
+      "type": "library",
+      "root": "libs/interceptors",
+      "entryFile": "index",
+      "sourceRoot": "libs/interceptors/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/interceptors/tsconfig.lib.json"
+      }
+    },
+    "@nnpp/database": {
+      "type": "library",
+      "root": "libs/database",
+      "entryFile": "index",
+      "sourceRoot": "libs/database/src",
+      "compilerOptions": {
+        "tsConfigPath": "libs/database/tsconfig.lib.json"
+      }
+    }
+  }
+}
