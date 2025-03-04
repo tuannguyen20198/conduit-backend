@@ -81,4 +81,12 @@ export class ArticleController {
       throw new Error(`Update failed: ${error.message}`);
     }
   }
+
+  @UseGuards(AuthGuard) 
+  @ResponseMessage("Delete article by slug")
+  @Delete(':slug')
+  async delete(@Param('slug') slug: string, @Identity() user): Promise<void> {
+    const userId = user.id; // Lấy id người dùng từ thông tin trong JWT
+    await this.articleService.delete(slug, userId);
+  }
 }

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '@nnpp/database';
 import aqp from 'api-query-params';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -281,5 +281,25 @@ export class ArticleService {
     } catch (error) {
       throw new Error(`Error updating article: ${error.message}`);
     }
+  }
+  async delete(slug: string, userId: number): Promise<void> {
+    // Tìm bài viết theo slug và kiểm tra quyền sở hữu
+    const article = await this.databaseService.article.findUnique({
+      where: { slug },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    // Kiểm tra xem người dùng có phải là tác giả của bài viết không
+    if (article.authorId !== userId) {
+      throw new ForbiddenException('You do not have permission to delete this article');
+    }
+
+    // Xóa bài viết
+    await this.databaseService.article.delete({
+      where: { slug },
+    });
   }
 }
