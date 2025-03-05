@@ -39,7 +39,7 @@ $ yarn install
 $ yarn run start
 
 # watch mode
-$ yarn run start:dev
+$ yarn run start:dev:main
 
 # production mode
 $ yarn run start:prod
@@ -97,4 +97,23 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
 # conduit-backend
+
+## Config prisma
+
+- cd coduit-backend
+- create .env
+- DATABASE_URL="postgresql://user:password@localhost:5433/conduit?schema=public"
+
+## Config Database Postgres
+
+- cd coduit-backend/app/main-service
+- create .env
+- APP_PORT=3000
+- APP_NAME=tuan
+- DB_HOST = localhost
+- DB_USERNAME = user
+- DB_PASSWORD = password
+- DB_PORT = 5433
+- DB_NAME = conduit
