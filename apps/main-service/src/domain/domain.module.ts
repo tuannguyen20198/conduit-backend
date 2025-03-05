@@ -6,6 +6,7 @@ import { AuthGuard } from './auth/auth.guard';
 import { ProfileModule } from './profile/profile.module';
 import { ArticleModule } from './article/article.module';
 import { CommentsModule } from './comments/comments.module';
+import { TagsModule } from './tags/tags.module';
 
 // Inversion of control
 // Container
@@ -16,6 +17,7 @@ import { CommentsModule } from './comments/comments.module';
     ProfileModule, 
     ArticleModule,
     CommentsModule,
+    TagsModule,
   ],
   providers: [
     {
