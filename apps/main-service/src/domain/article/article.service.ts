@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { DatabaseService } from '@nnpp/database';
 import aqp from 'api-query-params';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -7,7 +7,9 @@ import { Article } from '@prisma/client';
 
 @Injectable()
 export class ArticleService {
-  constructor(private databaseService: DatabaseService){}
+  constructor(
+    private databaseService: DatabaseService,
+  ){}
   async findAll(currentPage: number, limit: number, qs: string) {
     let filter = {};
     let parsedQuery = {};

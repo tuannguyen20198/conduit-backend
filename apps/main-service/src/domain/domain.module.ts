@@ -5,6 +5,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './auth/auth.guard';
 import { ProfileModule } from './profile/profile.module';
 import { ArticleModule } from './article/article.module';
+import { CommentsModule } from './comments/comments.module';
 
 // Inversion of control
 // Container
@@ -14,6 +15,7 @@ import { ArticleModule } from './article/article.module';
     AuthModule,
     ProfileModule, 
     ArticleModule,
+    CommentsModule,
   ],
   providers: [
     {

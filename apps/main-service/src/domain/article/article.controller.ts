@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Put, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Put, NotFoundException, UnauthorizedException, UsePipes, ValidationPipe } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
@@ -10,7 +10,9 @@ import { Article } from '@prisma/client';
 
 @Controller('/article')
 export class ArticleController {
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(
+    private readonly articleService: ArticleService,
+  ) {}
   @Public()
   @Get()
   @ResponseMessage('Get all articles')
@@ -89,4 +91,5 @@ export class ArticleController {
     const userId = user.id; // Lấy id người dùng từ thông tin trong JWT
     await this.articleService.delete(slug, userId);
   }
+
 }
