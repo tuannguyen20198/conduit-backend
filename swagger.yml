@@ -276,8 +276,15 @@ info:
   version: "1.0"
   contact: {}
 tags: []
-servers: []
+servers:
+  - url: http://localhost:3000
 components:
+  securitySchemes:
+    access-token:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
+      description: Enter JWT token here
   schemas:
     UpdateUserDto:
       type: object

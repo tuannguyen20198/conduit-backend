@@ -20,6 +20,16 @@ async function bootstrap() {
     .setTitle('Conduit API')
     .setDescription('API documentation for Conduit')
     .setVersion('1.0')
+    .addServer('http://localhost:3000')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Enter JWT token here',
+      },
+      'access-token', // Tên security scheme
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);
