@@ -2,9 +2,9 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, Validation
 import { CommentsService } from './comments.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
-import { Identity } from '../auth/identity.decorator';
-import { AuthGuard } from '../auth/auth.guard';
 import { ResponseMessage } from '@nnpp/decorators/message.decorator';
+import { Identity } from '../users/identity.decorator';
+import { AuthGuard } from '../auth/auth.grand';
 
 @Controller('article')
 export class CommentsController {

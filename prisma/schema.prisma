@@ -14,7 +14,6 @@ model User {
   password   String
   image      String?
   bio        String?
-  is_active  Boolean?
   created_at DateTime @default(now())
   updated_at DateTime @default(now())
 
@@ -35,7 +34,6 @@ model User {
 model Tag {
   id         Int      @id @default(autoincrement())
   title      String   @unique
-  is_active  Boolean
   created_at DateTime @default(now())
   updated_at DateTime @default(now())
 

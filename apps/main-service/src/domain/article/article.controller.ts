@@ -2,11 +2,11 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Pu
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { AuthGuard } from '../auth/auth.guard';
 import { ResponseMessage } from '@nnpp/decorators/message.decorator';
 import { Public } from '@nnpp/decorators';
-import { Identity } from '../auth/identity.decorator';
 import { Article } from '@prisma/client';
+import { AuthGuard } from '../auth/auth.grand';
+import { Identity } from '../users/identity.decorator';
 
 @Controller('/article')
 export class ArticleController {

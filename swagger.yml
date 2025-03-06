@@ -9,7 +9,7 @@ paths:
           description: ""
       tags:
         - App
-  /api/users:
+  /api/user:
     get:
       operationId: UserController_getMe
       parameters: []
@@ -31,39 +31,31 @@ paths:
         "200":
           description: ""
       tags: *a1
-  /api/users/logout:
+  /api/users/login:
     post:
-      operationId: UserController_logout
-      parameters: []
-      responses:
-        "201":
-          description: ""
-      tags: *a1
-  /api/auth/sign-in:
-    post:
-      operationId: AuthController_signIn
+      operationId: UsersController_signIn
       parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignInDto"
+              $ref: "#/components/schemas/LoginDto"
       responses:
         "201":
           description: ""
       tags: &a2
-        - Auth
-  /api/auth/register:
+        - Users
+  /api/users:
     post:
-      operationId: AuthController_createUser
+      operationId: UsersController_createUser
       parameters: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateUserDto"
+              $ref: "#/components/schemas/registerUserDto"
       responses:
         "201":
           description: ""
@@ -289,11 +281,20 @@ components:
   schemas:
     UpdateUserDto:
       type: object
-      properties: {}
-    SignInDto:
+      properties:
+        email:
+          type: string
+          example: jake@jake.jake
+        bio:
+          type: string
+          example: I like to skateboard
+        image:
+          type: string
+          example: https://i.stack.imgur.com/xHWG8.jpg
+    LoginDto:
       type: object
       properties: {}
-    CreateUserDto:
+    registerUserDto:
       type: object
       properties: {}
     UpdateArticleDto:

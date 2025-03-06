@@ -1,19 +1,17 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { setupApiServer } from '@nnpp/setup/setup-api-server';
 import { AppModule } from './app.module';
-import { SerializeInterceptor } from '@nnpp/interceptors';
 import { config } from './config';
-import { TransformInterceptor } from '@nnpp/interceptors/transform.interceptor';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
 import * as yaml from 'yaml';
+import { TransformInterceptor } from '@nnpp/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.useGlobalInterceptors(new SerializeInterceptor());
   const reflector = app.get(Reflector);
-  app.useGlobalInterceptors(new TransformInterceptor(reflector));
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   // Thiết lập Global Prefix để đảm bảo Swagger hiển thị /api/ trong đường dẫn
   app.setGlobalPrefix('api');

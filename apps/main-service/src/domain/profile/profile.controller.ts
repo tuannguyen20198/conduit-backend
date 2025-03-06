@@ -1,10 +1,10 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, Req, Res, UseGuards } from '@nestjs/common';
-import { AuthGuard } from '../auth/auth.guard';
 import { FollowDto } from './dto/create-profile.dto';
 import { ProfileService } from './profile.service';
-import { Identity } from '../auth/identity.decorator';
 import { User } from '@prisma/client';
 import { ResponseMessage } from '@nnpp/decorators/message.decorator';
+import { AuthGuard } from '../auth/auth.grand';
+import { Identity } from '../users/identity.decorator';
 
 @Controller('/profiles')
 export class ProfileController {
