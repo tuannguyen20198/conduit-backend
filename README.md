@@ -102,16 +102,23 @@ Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
 
 ## Config prisma
 
-- cd coduit-backend
-- create .env
+cd conduit-backend
+touch .env
+
 - DATABASE_URL="postgresql://user:password@localhost:5433/conduit?schema=public"
 
 ## Config Database Postgres
 
-- cd coduit-backend/app/main-service
-- create .env
+cd conduit-backend/app/main-service
+touch .env
+
+# Cấu hình ứng dụng
+
 - APP_PORT=3000
 - APP_NAME=tuan
+
+# Cấu hình Database
+
 - DB_HOST = localhost
 - DB_USERNAME = user
 - DB_PASSWORD = password
