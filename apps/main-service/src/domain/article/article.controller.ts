@@ -1,95 +1,143 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Put, NotFoundException, UnauthorizedException, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+  NotFoundException,
+  Put,
+  BadRequestException,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { ArticleService } from './article.service';
-import { CreateArticleDto } from './dto/create-article.dto';
-import { UpdateArticleDto } from './dto/update-article.dto';
-import { ResponseMessage } from '@nnpp/decorators/message.decorator';
+import {
+  Pagination,
+  PaginationParams,
+} from '@nnpp/decorators/pagination.decorator';
+import { ApiResponse } from '@nestjs/swagger';
+import { ArticleResponseDto, CreateArticleDto } from './dto/create-article.dto';
+import { AuthGuard } from '../guards/auth.guard';
+import { Identity } from '@nnpp/decorators/identity.decorator';
 import { Public } from '@nnpp/decorators';
-import { Article } from '@prisma/client';
-import { AuthGuard } from '../auth/auth.grand';
-import { Identity } from '../users/identity.decorator';
+import { UpdateArticleDto } from './dto/update-article.dto';
 
-@Controller('/article')
+@Controller()
 export class ArticleController {
-  constructor(
-    private readonly articleService: ArticleService,
-  ) {}
+  constructor(private readonly articleService: ArticleService) {}
+
   @Public()
-  @Get()
-  @ResponseMessage('Get all articles')
+  @Get('articles')
+  @ApiResponse({ type: ArticleResponseDto }) // ✅ Định nghĩa kiểu trả về cho Swagger
   async getArticles(
-    @Query('current') currentPage : number,
-    @Query('pageSize') limit : number,
-    @Query() queryParams: any,
+    @Pagination() pagination: PaginationParams, // Xử lý phân trang
+    @Query('tag') tag?: string,
+    @Query('author') author?: string,
+    @Query('favorited') favorited?: string,
   ) {
-    return this.articleService.findAll(Number(currentPage), Number(limit), queryParams);
+    return this.articleService.getArticles({
+      tag,
+      author,
+      favorited,
+      pagination,
+    });
   }
 
-  @Post()
-  @UseGuards(AuthGuard) // Require Authentication
-  async create(@Identity() user, @Body('article') createArticleDto: CreateArticleDto) {
-    return this.articleService.createArticle(user.id, createArticleDto);
-  }
-
-  @UseGuards(AuthGuard) // Apply the JwtAuthGuard to protect the route
-  @Get('/feed')
-  async findFeed(
-    @Query('currentPage') currentPage: string,
-    @Query('pageSize') pageSize: string,
-    @Query('tags') tags: string,
-    @Identity() user,  // To access the request object and get user information
+  @Post('articles')
+  @UseGuards(AuthGuard) // Authentication required
+  async createArticle(
+    @Body('article') createArticleDto: CreateArticleDto,
+    @Identity() user,
   ) {
-    // Extract the user ID from the request (assuming the JWT payload contains userId)
-    const userId = user?.id; // This assumes user data is attached to the request by the guard
-
-    if (!userId) {
-      throw new Error('User not authenticated');
-    }
-
-    // Convert currentPage and pageSize to numbers
-    const page = Number(currentPage) || 1;
-    const size = Number(pageSize) || 10;
-
-    // Pass the userId and query parameters to the service method
-    return this.articleService.findFeed(page, size, userId, tags || '');
+    return this.articleService.createArticle(createArticleDto, user.id);
   }
 
   @Public()
-  @ResponseMessage("Get article by slug")
-  @Get(':slug')
-  async findOne(@Param('slug') slug: string) {
-    // Call the service method to retrieve the article by its slug
-    const article = await this.articleService.findOneBySlug(slug);
-
+  @Get('/articles/:slug')
+  async getArticleBySlug(@Param('slug') slug: string) {
+    const article = await this.articleService.getArticleBySlug(slug);
     if (!article) {
-      throw new Error('Article not found');
+      throw new NotFoundException('Article not found');
     }
-    return article;
+    return { article };
   }
 
+  @Put('/articles/:slug')
   @UseGuards(AuthGuard)
-  @Post(':slug')
-  @ResponseMessage("Update article by slug")
-  async update(@Param('slug') slug: string, @Body() updateArticleDto: UpdateArticleDto) {
-    try {
-      // Gọi service để cập nhật bài viết theo slug và dữ liệu từ DTO
-      const updatedArticle = await this.articleService.update(slug, updateArticleDto);
-      console.log(updatedArticle)
-      if (!updatedArticle) {
-        throw new Error('Article not found or update failed');
-      }
-  
-      return updatedArticle; // Trả về bài viết đã được cập nhật
-    } catch (error) {
-      throw new Error(`Update failed: ${error.message}`);
+  async updateArticle(
+    @Param('slug') slug: string,
+    @Body('article') articleData: UpdateArticleDto,
+    @Identity() user, // Lấy thông tin user từ token
+  ) {
+    return this.articleService.updateArticle(slug, articleData, user.id);
+  }
+
+  @Delete('/articles/:slug')
+  @UseGuards(AuthGuard) // Bắt buộc xác thực
+  async deleteArticle(
+    @Param('slug') slug: string,
+    @Identity() user, // Lấy user từ request
+  ) {
+    return this.articleService.deleteArticle(slug, user.id);
+  }
+
+  @Get('feed')
+  @UseGuards(AuthGuard) // Yêu cầu authentication
+  async getFeedArticles(
+    @Identity() user,
+    @Pagination() pagination: PaginationParams,
+  ) {
+    const userId = user.id; // Lấy userId từ JWT token
+    return this.articleService.getFeedArticles(
+      userId,
+      pagination.limit,
+      pagination.offset,
+    );
+  }
+
+  @Post('/articles/:slug/comments')
+  @UseGuards(AuthGuard) // Bắt buộc xác thực
+  async addComment(
+    @Param('slug') slug: string,
+    @Body('comment') commentData: { body: string },
+    @Identity() user, // Lấy user từ request
+  ) {
+    if (!commentData.body) {
+      throw new BadRequestException('Comment body is required');
     }
+    return this.articleService.addComment(slug, user.id, commentData.body);
   }
 
-  @UseGuards(AuthGuard) 
-  @ResponseMessage("Delete article by slug")
-  @Delete(':slug')
-  async delete(@Param('slug') slug: string, @Identity() user): Promise<void> {
-    const userId = user.id; // Lấy id người dùng từ thông tin trong JWT
-    await this.articleService.delete(slug, userId);
+  @Public()
+  @Get('/articles/:slug/comments')
+  async getComments(@Param('slug') slug: string) {
+    return this.articleService.getComments(slug);
   }
 
+  @Delete('/articles/:slug/comments/:id')
+  @UseGuards(AuthGuard)
+  async deleteComment(
+    @Param('slug') slug: string,
+    @Param('id', ParseIntPipe) commentId: number,
+    @Identity() user, // Middleware lấy thông tin user từ JWT
+  ) {
+    return this.articleService.deleteComment(slug, commentId, user.id);
+  }
+
+  @Post('/articles/:slug/favorite')
+  @UseGuards(AuthGuard)
+  async favoriteArticle(@Param('slug') slug: string, @Identity() user) {
+    const userId = user.id; // Lấy ID user từ request (do middleware auth cung cấp)
+    return this.articleService.favoriteArticle(slug, userId);
+  }
+
+  @Delete('/articles/:slug/favorite')
+  @UseGuards(AuthGuard)
+  async unfavoriteArticle(@Param('slug') slug: string, @Identity() user) {
+    const userId = user.id;
+    return this.articleService.unfavoriteArticle(slug, userId);
+  }
 }

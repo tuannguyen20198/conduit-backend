@@ -1,25 +1,24 @@
 import { Module } from '@nestjs/common';
 import { UserModule } from './user/user.module';
 import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './guards/auth.guard';
+import { JwtModule } from '@nestjs/jwt';
+import { config } from '../config';
 import { ProfileModule } from './profile/profile.module';
 import { ArticleModule } from './article/article.module';
-import { CommentsModule } from './comments/comments.module';
-import { TagsModule } from './tags/tags.module';
-import { AuthGuard } from './auth/auth.grand';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
+import { TagModule } from './tag/tag.module';
 
-// Inversion of control
-// Container
 @Module({
-  imports: [ 
+  imports: [
+    JwtModule.register({
+      global: true,
+      secret: config.jwt.secret,
+      signOptions: { expiresIn: config.jwt.expiresIn },
+    }),
     UserModule,
-    UsersModule,
-    ProfileModule, 
+    ProfileModule,
     ArticleModule,
-    AuthModule,
-    CommentsModule,
-    TagsModule,
+    TagModule,
   ],
   providers: [
     {

@@ -17,8 +17,8 @@
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
-    "esModuleInterop": true,
     "paths": {
+      "@config/*": ["config/*"],
       "@nnpp/decorators": [
         "libs/decorators/src"
       ],
@@ -42,6 +42,12 @@
       ],
       "@nnpp/database/*": [
         "libs/database/src/*"
+      ],
+      "@nnpp/constants": [
+        "libs/constants/src"
+      ],
+      "@nnpp/constants/*": [
+        "libs/constants/src/*"
       ]
     }
   }

@@ -44,11 +44,20 @@ export function validate(config: Record<string, unknown>) {
 }
 
 export const config = {
-  APP_PORT: process.env.APP_PORT ? parseInt(process.env.APP_PORT, 10) : 4000,
-  APP_NAME: process.env.APP_NAME ?? 'main-service',
-  DB_HOST: process.env.DB_HOST,
-  DB_USERNAME: process.env.DB_USERNAME,
-  DB_PASSWORD: process.env.DB_PASSWORD,
-  DB_PORT: parseInt(process.env.DB_PORT, 10),
-  DB_NAME: process.env.DB_NAME,
+  app: {
+    port: process.env.APP_PORT ? parseInt(process.env.APP_PORT, 10) : 4000,
+    name: process.env.APP_NAME,
+  },
+  db: {
+    host: process.env.DB_HOST,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PASSWORD,
+    port: parseInt(process.env.DB_PORT, 10),
+    name: process.env.DB_NAME,
+  },
+  jwt: {
+    secret: process.env.JWT_SECRET ?? 'secret',
+    expiresIn: process.env.JWT_EXPIRES_IN ?? '1d',
+    issuer: process.env.JWT_ISSUER ?? 'issuer',
+  },
 };

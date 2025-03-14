@@ -1,194 +1,347 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from '@nnpp/database';
-import aqp from 'api-query-params';
 import { CreateArticleDto } from './dto/create-article.dto';
+import slugify from 'slugify';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { Article } from '@prisma/client';
 
 @Injectable()
 export class ArticleService {
-  constructor(
-    private databaseService: DatabaseService,
-  ){}
-  async findAll(currentPage: number, limit: number, qs: string) {
-    let filter = {};
-    let parsedQuery = {};
-    let listTags = [];
-  
-    try {
-      // Phân tích query string để lấy các tham số lọc
-      if (qs) {
-        parsedQuery = aqp(qs);
-        filter = parsedQuery['filter'] || {};
-      }
-      console.log("Parsed Query:", parsedQuery); // Log parsed query
-    } catch (error) {
-      console.error('❌ Lỗi parse query string:', error);
-      filter = {}; // Default filter nếu lỗi
-    }
-  
-    // Trang hiện tại và kích thước trang
-    const page = Number(parsedQuery['currentPage']) || Number(currentPage) || 1;
-    const pageSize = Number(parsedQuery['pageSize']) || Number(limit) || 10;
-    const offset = (page > 0 ? page - 1 : 0) * pageSize;
-  
-    // 🏷 Lấy danh sách tags từ query (nếu có)
-    if (parsedQuery['filter'] && parsedQuery['filter']['tags']) {
-      listTags = parsedQuery['filter']['tags'].split(',');
-    }
-  
-    console.log("List Tags:", listTags); // Log danh sách tags đã lấy
-  
-    let tagFilter = {};
-  
-    // Nếu có tags, thêm điều kiện lọc
-    if (listTags.length > 0) {
-      tagFilter = {
-        tags: {
-          some: {
-            tag: {
-              title: {
-                in: listTags, // Tìm kiếm các bài viết có tags trong danh sách listTags
-              },
-            },
+  constructor(private databaseServices: DatabaseService) {}
+  async getArticles({
+    tag,
+    author,
+    favorited,
+    pagination,
+  }: {
+    tag?: string;
+    author?: string;
+    favorited?: string;
+    pagination: { limit: number; offset: number };
+  }) {
+    const { limit, offset } = pagination;
+
+    const where: any = {};
+
+    if (tag) {
+      where.tagList = {
+        some: {
+          name: {
+            in: tag.split(','), // Tìm bài viết chứa ÍT NHẤT 1 tag trong danh sách
           },
         },
       };
     }
-  
-    console.log("Tag Filter:", tagFilter); // Log filter được tạo ra
-  
-    try {
-      // Lấy tổng số bài viết thỏa mãn điều kiện filter
-      const totalItems = await this.databaseService.article.count({
-        where: tagFilter,
-      });
-      console.log("Total Items:", totalItems); // Log tổng số bài viết
-  
-      // Lấy danh sách bài viết theo điều kiện đã lọc và phân trang
-      const articles = await this.databaseService.article.findMany({
-        where: tagFilter,
-        skip: offset,
-        take: pageSize,
-        include: {
-          author: {
-            select: {
-              username: true,
-              bio: true,
-              image: true,
-            },
-          },
-          tags: {
-            select: {
-              tag: {
-                select: {
-                  title: true,
-                },
-              },
-            },
-          },
-          favorites: true,
-        },
-      });
-  
-      console.log("Articles:", articles); // Log danh sách bài viết
-  
-      return {
-        meta: {
-          currentPage: page,
-          pageSize,
-          totalPages: Math.ceil(totalItems / pageSize),
-          totalItems,
-          searchedTags: listTags, // Trả về các tag đã tìm kiếm
-        },
-        articles,
-      };
-    } catch (error) {
-      console.error('❌ Lỗi truy vấn Prisma:', error);
-      throw new Error('Không thể lấy danh sách bài viết');
-    }
-  }
-  async createArticle(userId: number, createArticleDto: CreateArticleDto) {
-    const { title, description, body, tagList } = createArticleDto;
-
-    // Kiểm tra nếu không có tagList thì báo lỗi
-    if (!tagList || tagList.length === 0) {
-      throw new Error('Bạn phải cung cấp ít nhất một tag để tạo bài viết!');
+    if (author) {
+      where.author = { username: author };
     }
 
-    // Tạo slug từ title
-    const slug = title.toLowerCase().replace(/ /g, '-');
+    if (favorited) {
+      where.favoritedBy = { some: { username: favorited } };
+    }
 
-    // Tạo bài viết
-    const article = await this.databaseService.article.create({
-      data: {
-        title,
-        description,
-        body,
-        slug,
-        total_like: '0', // 🔥 Thêm trường `total_like`, có thể để giá trị mặc định là '0'
+    const articles = await this.databaseServices.article.findMany({
+      where,
+      include: {
         author: {
-          connect: { id: userId }, // Kết nối với user
+          select: {
+            username: true,
+            bio: true,
+            image: true,
+          },
         },
-        tags: {
-          create: tagList.map((tag) => ({
-            tag: {
-              connectOrCreate: {
-                where: { title: tag },
-                create: { title: tag, is_active: true },
-              },
-            },
-          })),
+        tagList: {
+          select: {
+            name: true, // Lấy danh sách tag của bài viết
+          },
+        },
+        favoritedBy: true,
+      },
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' },
+    });
+    return {
+      articles: articles.map((article) => ({
+        slug: article.slug,
+        title: article.title,
+        description: article.description,
+        body: article.body,
+        tagList: article.tagList?.map((tag) => tag?.name) || [],
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        author: {
+          username: article.author.username,
+          bio: article.author.bio,
+          image: article.author.image,
+          following: false, // Cần cập nhật theo trạng thái của người dùng hiện tại
+        },
+        favorited: false, // Cần cập nhật theo user đăng nhập
+        favoritesCount: article.favoritedBy.length,
+      })),
+      articlesCount: await this.databaseServices.article.count({ where }),
+    };
+  }
+  // Lấy danh sách tác giả viết về 1 tag
+
+  async getFeedArticles(userId: number, limit = 20, offset = 0) {
+    // Lấy danh sách user mà currentUser đang follow
+    const currentUser = await this.databaseServices.user.findUnique({
+      where: { id: userId },
+      include: { following: true },
+    });
+
+    if (!currentUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const followingIds = currentUser.following.map((user) => user.id);
+
+    // Lấy danh sách bài viết của những người user đang follow
+    const articles = await this.databaseServices.article.findMany({
+      where: { authorId: { in: followingIds } },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+      skip: offset,
+      include: { author: true, favoritedBy: true },
+    });
+
+    return {
+      articles: articles.map((article) => ({
+        slug: article.slug,
+        title: article.title,
+        description: article.description,
+        body: article.body,
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        tagList: [], // Cần sửa nếu bạn có model Tag
+        favorited: article.favoritedBy.some((user) => user.id === userId),
+        favoritesCount: article.favoritedBy.length,
+        author: {
+          username: article.author.username,
+          bio: article.author.bio,
+          image: article.author.image,
+          following: currentUser.following.some(
+            (user) => user.id === article.authorId,
+          ),
+        },
+      })),
+      articlesCount: articles.length,
+    };
+  }
+
+  async getArticleBySlug(slug: string, currentUserId?: number) {
+    const article = await this.databaseServices.article.findUnique({
+      where: { slug },
+      include: {
+        author: {
+          include: {
+            followedBy: true, // Để check "following"
+          },
+        },
+        favoritedBy: true, // Để check "favorited"
+        tagList: true, // Để lấy danh sách tag
+      },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    return {
+      article: {
+        slug: article.slug,
+        title: article.title,
+        description: article.description,
+        body: article.body,
+        tagList: article.tagList.map((tag) => tag.name), // Chuyển từ object sang array
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        favorited: article.favoritedBy.some(
+          (user) => user.id === currentUserId,
+        ),
+        favoritesCount: article.favoritedBy.length,
+        author: {
+          username: article.author.username,
+          bio: article.author.bio,
+          image:
+            article.author.image ||
+            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+          following: article.author.followedBy.some(
+            (follower) => follower.id === currentUserId,
+          ),
+        },
+      },
+    };
+  }
+
+  async createArticle(dto: CreateArticleDto, userId: number) {
+    const slug = slugify(dto.title, { lower: true });
+
+    const article = await this.databaseServices.article.create({
+      data: {
+        slug,
+        title: dto.title,
+        description: dto.description,
+        body: dto.body,
+        authorId: userId,
+        tagList: {
+          connectOrCreate:
+            dto.tagList?.map((tag) => ({
+              where: { name: tag },
+              create: { name: tag },
+            })) || [],
         },
       },
       include: {
-        author: { select: { username: true, bio: true, image: true } },
-        tags: { select: { tag: { select: { title: true } } } },
+        author: {
+          include: {
+            followedBy: true, // Để kiểm tra "following"
+          },
+        },
+        favoritedBy: true, // Để kiểm tra "favorited"
+        tagList: true,
+      },
+    });
+    return {
+      article: {
+        slug: article.slug,
+        title: article.title,
+        description: article.description,
+        body: article.body,
+        tagList: article.tagList.map((tag) => tag.name), // Chuyển tag từ object -> array
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        favorited: false, // Mặc định là chưa favorited
+        favoritesCount: article.favoritedBy.length,
+        author: {
+          username: article.author.username,
+          bio: article.author.bio,
+          image:
+            article.author.image ||
+            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+          following: false, // Mặc định là false khi tạo bài viết
+        },
+      },
+    };
+  }
+
+  async updateArticle(slug: string, dto: UpdateArticleDto, userId: number) {
+    const article = await this.databaseServices.article.findUnique({
+      where: { slug },
+      include: {
+        author: {
+          include: { followedBy: true },
+        },
+        favoritedBy: true,
+        tagList: true,
       },
     });
 
-    return article;
-  }
-  async findFeed(currentPage: number, limit: number, userId: number, qs: string) {
-    let parsedQuery = {};
-    let listTags = [];
-    let tagFilter = {};
-
-    try {
-      // Parse the query string
-      if (qs) {
-        parsedQuery = aqp(qs);
-        listTags = parsedQuery['filter']?.tags?.split(',') || [];
-      }
-    } catch (error) {
-      console.error('❌ Error parsing query string:', error);
+    if (!article) {
+      throw new NotFoundException('Article not found');
     }
 
-    const page = Number(parsedQuery['currentPage']) || Number(currentPage) || 1;
-    const pageSize = Number(parsedQuery['pageSize']) || Number(limit) || 10;
-    const offset = (page - 1) * pageSize;
+    if (article.authorId !== userId) {
+      throw new ForbiddenException('You are not allowed to edit this article');
+    }
 
-    // Fetch the list of followed users
-    const followedUsers = await this.databaseService.follower.findMany({
-      where:{
-        following_id: userId
+    let updateData: any = {};
+    if (dto.title && dto.title !== article.title) {
+      updateData.title = dto.title;
+      updateData.slug = slugify(dto.title, { lower: true });
+    }
+    if (dto.description) updateData.description = dto.description;
+    if (dto.body) updateData.body = dto.body;
+
+    if (dto.tagList) {
+      updateData.tagList = {
+        set: [],
+        connectOrCreate: dto.tagList.map((tag) => ({
+          where: { name: tag },
+          create: { name: tag },
+        })),
+      };
+    }
+
+    const updatedArticle = await this.databaseServices.article.update({
+      where: { id: article.id },
+      data: { ...updateData, updatedAt: new Date() },
+      include: {
+        author: {
+          include: { followedBy: true },
+        },
+        favoritedBy: true,
+        tagList: true,
       },
-      select:{
-        following_id: true
-      }
     });
 
-    const followedUserIds = followedUsers.map(follow => follow.following_id);
-
-    // Fetch articles from followed users
-    let articlesQuery = {
-      where: {
-        authorId: { in: followedUserIds }, // Get articles from followed users
+    return {
+      article: {
+        slug: updatedArticle.slug,
+        title: updatedArticle.title,
+        description: updatedArticle.description,
+        body: updatedArticle.body,
+        tagList: updatedArticle.tagList.map((tag) => tag.name), // 🏷 Chuyển tag object -> array
+        createdAt: updatedArticle.createdAt,
+        updatedAt: updatedArticle.updatedAt,
+        favorited: false, // Cần cập nhật theo trạng thái của user
+        favoritesCount: updatedArticle.favoritedBy.length,
+        author: {
+          username: updatedArticle.author.username,
+          bio: updatedArticle.author.bio,
+          image:
+            updatedArticle.author.image ||
+            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+          following: false, // Mặc định là false khi cập nhật bài viết
+        },
       },
-      skip: offset,
-      take: pageSize,
-      orderBy: {
-        createdAt: 'desc' as const,  // Order by most recent first
+    };
+  }
+
+  async deleteArticle(slug: string, userId: number) {
+    // Tìm bài viết theo slug
+    const article = await this.databaseServices.article.findUnique({
+      where: { slug },
+      include: { author: true }, // Lấy thông tin tác giả để kiểm tra quyền
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    // Kiểm tra user có phải tác giả không
+    if (article.authorId !== userId) {
+      throw new ForbiddenException(
+        'You do not have permission to delete this article',
+      );
+    }
+
+    // Xóa bài viết
+    await this.databaseServices.article.delete({ where: { slug } });
+
+    return { message: 'Article deleted successfully' };
+  }
+
+  async addComment(slug: string, userId: number, body: string) {
+    // Tìm bài viết theo slug
+    const article = await this.databaseServices.article.findUnique({
+      where: { slug },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    // Tạo bình luận mới
+    const comment = await this.databaseServices.comment.create({
+      data: {
+        body,
+        authorId: userId,
+        articleId: article.id,
       },
       include: {
         author: {
@@ -198,110 +351,190 @@ export class ArticleService {
             image: true,
           },
         },
-        tags: {
-          select: {
-            tag: {
-              select: {
-                title: true,
-              },
-            },
-          },
-        },
-        favorites: true,
       },
-    };
-    // Get total count of articles
-    const totalItems = await this.databaseService.article.count({
-      where: articlesQuery.where,
     });
 
-    // Get the list of articles
-    const articles = await this.databaseService.article.findMany(articlesQuery);
-
     return {
-      meta: {
-        currentPage: page,
-        pageSize,
-        totalPages: Math.ceil(totalItems / pageSize),
-        totalItems,
-        searchedTags: listTags,  // Include the searched tags
+      comment: {
+        id: comment.id,
+        createdAt: comment.createdAt.toISOString(),
+        updatedAt: comment.updatedAt.toISOString(),
+        body: comment.body,
+        author: {
+          username: comment.author.username,
+          bio: comment.author.bio,
+          image:
+            comment.author.image ||
+            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+          following: false, // Cần cập nhật nếu có chức năng follow
+        },
       },
-      articles,
     };
   }
-  async findOneBySlug(slug: string) {
-    try {
-      return await this.databaseService.article.findUnique({
-        where: { slug },
-        include: {
-          author: {
-            select: {
-              username: true,
-              bio: true,
-              image: true,
-            },
-          },
-          tags: {
-            select: {
-              tag: {
-                select: {
-                  title: true,
-                },
-              },
-            },
-          },
-          favorites: true,
-        },
-      });
-    } catch (error) {
-      console.error('❌ Lỗi truy vấn Prisma:', error);
-      throw new Error('Không thể lấy bài viết');
-    }
-  }
-  async update(slug: string, updateArticleDto: UpdateArticleDto) {
-    try {
-      // Tìm bài viết theo slug
-      const article = await this.databaseService.article.findUnique({
-        where: { slug },
-      });
-  
-      if (!article) {
-        throw new Error('Article not found');
-      }
-  
-      // Cập nhật bài viết với dữ liệu từ DTO
-      const updatedArticle = await this.databaseService.article.update({
-        where: { slug },
-        data: {
-          title: updateArticleDto.title, // Cập nhật chỉ trường title
-          description:updateArticleDto.description,
-          body: updateArticleDto.body,
-        },
-      });
-  
-      return updatedArticle;  // Trả về bài viết đã cập nhật
-    } catch (error) {
-      throw new Error(`Error updating article: ${error.message}`);
-    }
-  }
-  async delete(slug: string, userId: number): Promise<void> {
-    // Tìm bài viết theo slug và kiểm tra quyền sở hữu
-    const article = await this.databaseService.article.findUnique({
+
+  async getComments(slug: string) {
+    // Kiểm tra bài viết có tồn tại không
+    const article = await this.databaseServices.article.findUnique({
       where: { slug },
+      select: { id: true }, // Chỉ lấy id để tối ưu truy vấn
     });
 
     if (!article) {
       throw new NotFoundException('Article not found');
     }
 
-    // Kiểm tra xem người dùng có phải là tác giả của bài viết không
-    if (article.authorId !== userId) {
-      throw new ForbiddenException('You do not have permission to delete this article');
+    // Lấy tất cả comment của bài viết
+    const comments = await this.databaseServices.comment.findMany({
+      where: { articleId: article.id },
+      include: {
+        author: {
+          select: {
+            username: true,
+            bio: true,
+            image: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'asc' }, // Sắp xếp theo thời gian tạo
+    });
+
+    return {
+      comments: comments.map((comment) => ({
+        id: comment.id,
+        createdAt: comment.createdAt.toISOString(),
+        updatedAt: comment.updatedAt.toISOString(),
+        body: comment.body,
+        author: {
+          username: comment.author.username,
+          bio: comment.author.bio,
+          image:
+            comment.author.image ||
+            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+          following: false, // Có thể cập nhật sau nếu có chức năng follow
+        },
+      })),
+    };
+  }
+
+  async deleteComment(slug: string, commentId: number, userId: number) {
+    // Tìm bài viết theo slug
+    const article = await this.databaseServices.article.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
     }
 
-    // Xóa bài viết
-    await this.databaseService.article.delete({
-      where: { slug },
+    // Tìm comment theo ID và kiểm tra quyền xoá
+    const comment = await this.databaseServices.comment.findUnique({
+      where: { id: commentId },
+      select: { authorId: true },
     });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    if (comment.authorId !== userId) {
+      throw new ForbiddenException('You can only delete your own comments');
+    }
+
+    // Xoá comment
+    await this.databaseServices.comment.delete({
+      where: { id: commentId },
+    });
+
+    return { message: 'Comment deleted successfully' };
+  }
+
+  async favoriteArticle(slug: string, userId: number) {
+    const article = await this.databaseServices.article.findUnique({
+      where: { slug },
+      include: { favoritedBy: true, author: true, tagList: true },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    // Kiểm tra nếu user chưa favorited thì thêm vào danh sách
+    const alreadyFavorited = article.favoritedBy.some(
+      (user) => user.id === userId,
+    );
+    if (!alreadyFavorited) {
+      await this.databaseServices.article.update({
+        where: { slug },
+        data: { favoritedBy: { connect: { id: userId } } },
+      });
+    }
+
+    return {
+      article: {
+        slug: article.slug,
+        title: article.title,
+        description: article.description,
+        body: article.body,
+        tagList: article.tagList.map((tag) => tag.name), // Trả về danh sách tags đúng định dạng
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        favorited: true, // User đã yêu thích bài viết này
+        favoritesCount: article.favoritedBy.length + (alreadyFavorited ? 0 : 1), // Cập nhật số lượng yêu thích
+        author: {
+          username: article.author.username,
+          bio: article.author.bio,
+          image:
+            article.author.image ||
+            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+          following: false, // Cần cập nhật nếu có chức năng follow
+        },
+      },
+    };
+  }
+
+  async unfavoriteArticle(slug: string, userId: number) {
+    const article = await this.databaseServices.article.findUnique({
+      where: { slug },
+      include: { favoritedBy: true, author: true, tagList: true },
+    });
+
+    if (!article) {
+      throw new NotFoundException('Article not found');
+    }
+
+    // Kiểm tra nếu user đã favorited trước đó thì mới xóa
+    const alreadyFavorited = article.favoritedBy.some(
+      (user) => user.id === userId,
+    );
+
+    if (alreadyFavorited) {
+      await this.databaseServices.article.update({
+        where: { slug },
+        data: { favoritedBy: { disconnect: { id: userId } } },
+      });
+    }
+
+    return {
+      article: {
+        slug: article.slug,
+        title: article.title,
+        description: article.description,
+        body: article.body,
+        tagList: article.tagList.map((tag) => tag.name),
+        createdAt: article.createdAt,
+        updatedAt: article.updatedAt,
+        favorited: false, // Đã bỏ favorite
+        favoritesCount: article.favoritedBy.length - (alreadyFavorited ? 1 : 0),
+        author: {
+          username: article.author.username,
+          bio: article.author.bio,
+          image:
+            article.author.image ||
+            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+          following: false, // Cập nhật theo logic follow
+        },
+      },
+    };
   }
 }

@@ -1,6 +1,5 @@
 import { DynamicModule, Global, Module } from '@nestjs/common';
 import { DatabaseService } from './database.service';
-import { constructDBUrl } from './utils';
 
 interface DatabaseModuleOptions {
   dbUsername: string;
@@ -14,6 +13,15 @@ interface DatabaseModuleOptions {
 @Module({})
 export class DatabaseModule {
   static forRoot(options: DatabaseModuleOptions): DynamicModule {
+    if (!options.dbUsername || !options.dbPassword || !options.dbHost || !options.dbPort || !options.dbName) {
+      throw new Error('❌ DatabaseModuleOptions is invalid or missing!');
+    }
+
+    // Set lại biến môi trường DATABASE_URL
+    const databaseUrl = `postgresql://${options.dbUsername}:${options.dbPassword}@${options.dbHost}:${options.dbPort}/${options.dbName}?schema=public`;
+    process.env.DATABASE_URL = databaseUrl;
+    console.log('🔧 DATABASE_URL set to:', process.env.DATABASE_URL);
+
     return {
       module: DatabaseModule,
       providers: [
@@ -21,18 +29,7 @@ export class DatabaseModule {
           provide: 'DATABASE_OPTIONS',
           useValue: options,
         },
-        {
-          provide: DatabaseService,
-          useFactory: () => {
-            return new DatabaseService({
-              datasources: {
-                db: {
-                  url: constructDBUrl(options),
-                },
-              },
-            });
-          },
-        },
+        DatabaseService, // Không cần truyền options vào DatabaseService
       ],
       exports: ['DATABASE_OPTIONS', DatabaseService],
     };

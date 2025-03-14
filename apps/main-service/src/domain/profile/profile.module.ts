@@ -1,15 +1,11 @@
 import { Module } from '@nestjs/common';
-import { ProfileController } from './profile.controller';
 import { ProfileService } from './profile.service';
-import { UsersService } from '../users/users.service';
+import { ProfileController } from './profile.controller';
+import { UserService } from '../user/user.service';
 
 @Module({
   controllers: [ProfileController],
-  providers: [
-    ProfileService,
-    UsersService
-  ],
   exports: [ProfileService],
+  providers: [ProfileService,UserService]
 })
 export class ProfileModule {}
-console.log('ProfileModule has been initialized!');
