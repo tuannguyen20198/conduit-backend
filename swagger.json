@@ -1,0 +1,808 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/users": {
+      "post": {
+        "operationId": "createUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestCreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Create a new user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseWrapperDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data"
+          },
+          "401": {
+            "description": "Token is invalid"
+          },
+          "403": {
+            "description": "Do not have permissions"
+          },
+          "422": {
+            "description": "Invalid data"
+          },
+          "500": {
+            "description": "Internal server error, please try later"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a new user",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/users/login": {
+      "post": {
+        "operationId": "login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestLoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseWrapperDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data"
+          },
+          "401": {
+            "description": "Token is invalid"
+          },
+          "403": {
+            "description": "Do not have permissions"
+          },
+          "422": {
+            "description": "Invalid data"
+          },
+          "500": {
+            "description": "Internal server error, please try later"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Login",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/user": {
+      "get": {
+        "operationId": "getCurrentUser",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Get current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseWrapperDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data"
+          },
+          "401": {
+            "description": "Token is invalid"
+          },
+          "403": {
+            "description": "Do not have permissions"
+          },
+          "422": {
+            "description": "Invalid data"
+          },
+          "500": {
+            "description": "Internal server error, please try later"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get current user",
+        "tags": [
+          "User"
+        ]
+      },
+      "put": {
+        "operationId": "updateCurrentUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestUpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseWrapperDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid data"
+          },
+          "401": {
+            "description": "Token is invalid"
+          },
+          "403": {
+            "description": "Do not have permissions"
+          },
+          "422": {
+            "description": "Invalid data"
+          },
+          "500": {
+            "description": "Internal server error, please try later"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Update current user",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/profiles/{username}": {
+      "get": {
+        "operationId": "ProfileController_getProfile",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/api/profiles/{username}/follow": {
+      "post": {
+        "operationId": "ProfileController_followUser",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Profile"
+        ]
+      },
+      "delete": {
+        "operationId": "ProfileController_unfollowUser",
+        "parameters": [
+          {
+            "name": "username",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Profile"
+        ]
+      }
+    },
+    "/api/articles": {
+      "get": {
+        "operationId": "ArticleController_getArticles",
+        "parameters": [
+          {
+            "name": "tag",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "author",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "favorited",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ArticleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      },
+      "post": {
+        "operationId": "ArticleController_createArticle",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/api/articles/{slug}": {
+      "get": {
+        "operationId": "ArticleController_getArticleBySlug",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      },
+      "put": {
+        "operationId": "ArticleController_updateArticle",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      },
+      "delete": {
+        "operationId": "ArticleController_deleteArticle",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/api/feed": {
+      "get": {
+        "operationId": "ArticleController_getFeedArticles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/api/articles/{slug}/comments": {
+      "post": {
+        "operationId": "ArticleController_addComment",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      },
+      "get": {
+        "operationId": "ArticleController_getComments",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/api/articles/{slug}/comments/{id}": {
+      "delete": {
+        "operationId": "ArticleController_deleteComment",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/api/articles/{slug}/favorite": {
+      "post": {
+        "operationId": "ArticleController_favoriteArticle",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      },
+      "delete": {
+        "operationId": "ArticleController_unfavoriteArticle",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/api/tags": {
+      "get": {
+        "operationId": "TagController_getTags",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Tag"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Conduit APIs",
+    "description": "Conduit API description",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username of the user",
+            "example": "john_doe"
+          },
+          "email": {
+            "type": "string",
+            "description": "Email of the user",
+            "example": "john@nnpp.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user",
+            "example": "abc123"
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "password"
+        ]
+      },
+      "RequestCreateUserDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "description": "User to be created",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email of the user",
+            "example": "john@nnpp.com"
+          },
+          "token": {
+            "type": "string",
+            "description": "Token of the user",
+            "example": "token"
+          },
+          "username": {
+            "type": "string",
+            "description": "Username of the user",
+            "example": "john_doe"
+          },
+          "bio": {
+            "type": "string",
+            "description": "Bio of the user",
+            "example": "I am a software engineer"
+          },
+          "image": {
+            "type": "string",
+            "description": "Image of the user",
+            "example": "https://example.com"
+          }
+        },
+        "required": [
+          "email",
+          "token",
+          "username",
+          "bio",
+          "image"
+        ]
+      },
+      "UserResponseWrapperDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "description": "User response",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "Email of the user",
+            "example": "john@nnpp.com"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user",
+            "example": "abc123"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "RequestLoginDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "description": "User to be created",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "description": "Username of the user",
+            "example": "john_doe"
+          },
+          "password": {
+            "type": "string",
+            "description": "Password of the user",
+            "example": "abc123"
+          },
+          "bio": {
+            "type": "string",
+            "description": "Bio of the user",
+            "example": "I am a software engineer"
+          },
+          "image": {
+            "type": "string",
+            "description": "Avatar of the user",
+            "example": "https://example.com/avatar.png"
+          }
+        }
+      },
+      "RequestUpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "description": "User to be updated",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "CreateProfileDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "example": "jake"
+          },
+          "bio": {
+            "type": "string",
+            "example": "I work at statefarm",
+            "nullable": true
+          },
+          "image": {
+            "type": "string",
+            "example": "https://api.realworld.io/images/smiley-cyrus.jpg",
+            "nullable": true
+          },
+          "following": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "username",
+          "bio",
+          "image",
+          "following"
+        ]
+      },
+      "ArticleResponseDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "tagList": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "favorited": {
+            "type": "boolean"
+          },
+          "favoritesCount": {
+            "type": "number"
+          },
+          "author": {
+            "$ref": "#/components/schemas/CreateProfileDto"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "description",
+          "body",
+          "createdAt",
+          "updatedAt",
+          "tagList",
+          "favorited",
+          "favoritesCount",
+          "author"
+        ]
+      }
+    }
+  }
+}
