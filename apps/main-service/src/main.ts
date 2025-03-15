@@ -27,6 +27,7 @@ async function bootstrap() {
     .setDescription('Conduit API description')
     .setVersion('1.0')
     .addBearerAuth() // Nếu API cần xác thực
+    // .addServer('http://localhost:3000')
     .build();
 
   //  Tạo tài liệu Swagger chính xác
