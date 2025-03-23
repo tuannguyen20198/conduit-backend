@@ -8,12 +8,11 @@ import { writeFileSync } from 'fs';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Bật CORS để Swagger có thể gửi request đến API
   app.enableCors({
-    origin: '*', // Hoặc thay bằng ['http://localhost:3000', 'https://your-frontend.com']
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
-    credentials: true, // Nếu API yêu cầu gửi cookies hoặc token trong header
+    credentials: true,
   });
 
   await setupApiServer({
@@ -41,7 +40,7 @@ async function bootstrap() {
 
   // Tạo tài liệu Swagger chính xác
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('/api', app, swaggerDocument); // Sửa lỗi đường dẫn Swagger
+  SwaggerModule.setup('/api/docs', app, swaggerDocument); // Sửa lỗi đường dẫn Swagger
 
   // Ghi file JSON (tùy chọn)
   writeFileSync('./swagger.json', JSON.stringify(swaggerDocument, null, 2));
