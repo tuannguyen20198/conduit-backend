@@ -7,18 +7,10 @@ import { DomainModule } from './domain/domain.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      validate,
+      isGlobal: true, // Đảm bảo biến môi trường có sẵn toàn bộ ứng dụng
+      envFilePath: '.env', // Đọc tệp .env
     }),
-
-    DatabaseModule.forRoot({
-      dbUsername: config.db.username,
-      dbPassword: config.db.password,
-      dbHost: config.db.host,
-      dbPort: config.db.port,
-      dbName: config.db.name,
-    }),
-
-    DomainModule,
+    DatabaseModule.forRoot(), // Không truyền tham số nữa
   ],
 })
 export class AppModule {}

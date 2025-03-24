@@ -44,7 +44,7 @@
     ora "5.4.1"
     rxjs "7.8.1"
 
-"@apps/main-service@file:F:\\Dự án npp-fullstack-02\\nnp-fullstack-02\\conduit-backend\\apps\\main-service":
+"@apps/main-service@file:/Users/admin/conduit-backend/apps/main-service":
   version "0.0.1"
   resolved "file:apps/main-service"
 
@@ -322,11 +322,6 @@
   integrity sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
-
-"@esbuild/win32-x64@0.25.0":
-  version "0.25.0"
-  resolved "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.25.0.tgz"
-  integrity sha512-ZENoHJBxA20C2zFzh6AI4fT6RraMzjYw4xKWemRTRmRVtN9c5DcH9r/f2ihEkMjOW5eGgrwCslG/+Y/3bL+DHQ==
 
 "@eslint-community/eslint-utils@^4.2.0":
   version "4.4.1"
@@ -697,10 +692,10 @@
     tslib "2.5.3"
     uid "2.0.2"
 
-"@nestjs/config@^4.0.0":
-  version "4.0.0"
-  resolved "https://registry.npmjs.org/@nestjs/config/-/config-4.0.0.tgz"
-  integrity sha512-hyhUMtVwlT+tavtPNyekl8iP0QTU1U6awKrgdOSxhMhp3TQMltx7hz2yqGTcARp+19zWPfgJudyxthuD3lPp/Q==
+"@nestjs/config@^4.0.1":
+  version "4.0.1"
+  resolved "https://registry.npmjs.org/@nestjs/config/-/config-4.0.1.tgz"
+  integrity sha512-0hr6lKS//Wf8A6VcV69ts8uD0fke6jtmmmXSxzvwAzOM/HEXEKYEp21nRU+cpYxlYqm7Khb0oTOoVuDGk+AWUw==
   dependencies:
     dotenv "16.4.7"
     dotenv-expand "12.0.1"
@@ -2772,6 +2767,11 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmjs.org/fs.realpath/-/fs.realpath-1.0.0.tgz"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
+
+fsevents@^2.3.2, fsevents@~2.3.2, fsevents@2.3.3:
+  version "2.3.3"
+  resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
+  integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
 function-bind@^1.1.2:
   version "1.1.2"
