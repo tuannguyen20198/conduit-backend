@@ -10,6 +10,7 @@ import { DomainModule } from './domain/domain.module';
       isGlobal: true, // Đảm bảo biến môi trường có sẵn toàn bộ ứng dụng
       envFilePath: '.env', // Đọc tệp .env
     }),
+    DomainModule,
     DatabaseModule.forRoot(), // Không truyền tham số nữa
   ],
 })
