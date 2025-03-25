@@ -1,6 +1,20 @@
 version: '3.8'
 
 services:
+  nestjs_app:
+    build: .
+    env_file:
+      - .env
+    container_name: conduit-backend
+    restart: always
+    environment:
+      DATABASE_URL: "postgresql://user:password@localhost:5432/conduit?schema=public"
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+
   postgres:
     image: postgres:15
     container_name: postgres_prisma

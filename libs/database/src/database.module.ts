@@ -12,7 +12,7 @@ interface DatabaseModuleOptions {
 
 @Global()
 @Module({
-  imports: [ConfigModule], // Import ConfigModule vào DatabaseModule
+  imports: [ConfigModule.forRoot({ isGlobal: true })], // Load .env toàn cục
 })
 export class DatabaseModule {
   static forRoot(): DynamicModule {
@@ -21,8 +21,9 @@ export class DatabaseModule {
       providers: [
         {
           provide: 'DATABASE_OPTIONS',
-          useFactory: async (configService: ConfigService) => {
-            // Lấy các giá trị từ .env thông qua ConfigService
+          useFactory: async (
+            configService: ConfigService,
+          ): Promise<DatabaseModuleOptions> => {
             const dbUsername = configService.get<string>('DB_USERNAME');
             const dbPassword = configService.get<string>('DB_PASSWORD');
             const dbHost = configService.get<string>('DB_HOST');
@@ -30,25 +31,22 @@ export class DatabaseModule {
             const dbName = configService.get<string>('DB_NAME');
 
             if (!dbUsername || !dbPassword || !dbHost || !dbPort || !dbName) {
-              throw new Error('❌ DatabaseModuleOptions is invalid or missing!');
+              throw new Error(
+                '❌ DatabaseModuleOptions is invalid or missing!',
+              );
             }
 
-            // Set lại biến môi trường DATABASE_URL
+            // Cập nhật DATABASE_URL
             const databaseUrl = `postgresql://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?schema=public`;
             process.env.DATABASE_URL = databaseUrl;
-            console.log('🔧 DATABASE_URL set to:', process.env.DATABASE_URL);
 
-            return {
-              dbUsername,
-              dbPassword,
-              dbHost,
-              dbPort,
-              dbName,
-            };
+            console.log('✅ DATABASE_URL:', databaseUrl);
+
+            return { dbUsername, dbPassword, dbHost, dbPort, dbName };
           },
-          inject: [ConfigService], // Inject ConfigService vào provider
+          inject: [ConfigService],
         },
-        DatabaseService, // Không cần truyền options vào DatabaseService nữa
+        DatabaseService,
       ],
       exports: ['DATABASE_OPTIONS', DatabaseService],
     };
