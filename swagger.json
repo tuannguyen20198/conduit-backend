@@ -149,16 +149,6 @@
       "put": {
         "operationId": "updateCurrentUser",
         "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestUpdateUserDto"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Update current user",
@@ -677,47 +667,6 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/LoginDto"
-              }
-            ]
-          }
-        },
-        "required": [
-          "user"
-        ]
-      },
-      "UpdateUserDto": {
-        "type": "object",
-        "properties": {
-          "username": {
-            "type": "string",
-            "description": "Username of the user",
-            "example": "john_doe"
-          },
-          "password": {
-            "type": "string",
-            "description": "Password of the user",
-            "example": "abc123"
-          },
-          "bio": {
-            "type": "string",
-            "description": "Bio of the user",
-            "example": "I am a software engineer"
-          },
-          "image": {
-            "type": "string",
-            "description": "Avatar of the user",
-            "example": "https://example.com/avatar.png"
-          }
-        }
-      },
-      "RequestUpdateUserDto": {
-        "type": "object",
-        "properties": {
-          "user": {
-            "description": "User to be updated",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/UpdateUserDto"
               }
             ]
           }

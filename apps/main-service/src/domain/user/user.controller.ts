@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Logger,
+  NotFoundException,
   Post,
   Put,
   UnprocessableEntityException,
@@ -16,6 +17,7 @@ import { Identity } from '@nnpp/decorators/identity.decorator';
 import { User } from '@prisma/client';
 import { RequestLoginDto } from './dto/login.dto';
 import { RequestUpdateUserDto } from './dto/update-user.dto';
+import { DatabaseService } from '@nnpp/database';
 
 @ApiBearerAuth()
 @ApiTags('User')
@@ -23,7 +25,10 @@ import { RequestUpdateUserDto } from './dto/update-user.dto';
 export class UserController {
   private readonly logger: Logger;
 
-  constructor(private userService: UserService) {
+  constructor(
+    private userService: UserService,
+    private databaseService: DatabaseService,
+  ) {
     this.logger = new Logger(UserController.name);
   }
 
@@ -84,18 +89,8 @@ export class UserController {
     type: UserResponseWrapperDto,
   })
   @Put('user')
-  async updateCurrentUser(
-    @Identity() user: User,
-    @Body() data: RequestUpdateUserDto,
-  ) {
-    if (Object.keys(data.user).length === 0) {
-      throw new UnprocessableEntityException('At least one field is required');
-    }
-    const updatedUser = await this.userService.updateUserById(
-      user.id,
-      data.user,
-    );
-    const token = await this.userService.generateJwt(user);
-    return new UserResponseWrapperDto(updatedUser, token);
+  async updateUser(@Identity() user, @Body('user') updateData: Partial<User>) {
+    const userId = user.id; // ✅ Lấy userId từ token
+    return this.userService.updateUserById(user.id, updateData);
   }
 }

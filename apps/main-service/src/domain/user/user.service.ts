@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   Logger,
   NotFoundException,
@@ -55,29 +56,25 @@ export class UserService {
     return foundUser;
   }
 
-  async updateUserById(userId: number, data: UpdateUserDto) {
-    const foundUser = await this.findById(userId);
-    if (!foundUser) {
-      this.logger.warn(`User not found: ${userId}`);
-      throw new UnprocessableEntityException('User not found');
+  async updateUserById(userId: number, updateData: Partial<User>) {
+    if (!userId) {
+      throw new BadRequestException('User ID is required');
     }
 
-    if (data.username) {
-      const foundUserByUsername = await this.findByUsername(data.username);
-      if (foundUserByUsername) {
-        throw new UnprocessableEntityException('Username already exists');
-      }
-    }
-
-    return this.databaseService.user.update({
+    const user = await this.databaseService.user.findUnique({
       where: { id: userId },
-      data: {
-        username: data.username,
-        password: data.password,
-        bio: data.bio,
-        image: data.image,
-      },
     });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const updatedUser = await this.databaseService.user.update({
+      where: { id: userId },
+      data: updateData, // ✅ Bỏ `user` bọc ngoài
+    });
+
+    delete updatedUser.password; // ✅ Xóa password trước khi trả về
+    return { user: updatedUser };
   }
 
   async findByEmail(email: string) {
