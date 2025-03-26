@@ -40,8 +40,6 @@ export class DatabaseModule {
             const databaseUrl = `postgresql://${dbUsername}:${dbPassword}@${dbHost}:${dbPort}/${dbName}?schema=public`;
             process.env.DATABASE_URL = databaseUrl;
 
-            console.log('✅ DATABASE_URL:', databaseUrl);
-
             return { dbUsername, dbPassword, dbHost, dbPort, dbName };
           },
           inject: [ConfigService],

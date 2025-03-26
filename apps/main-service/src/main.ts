@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { writeFileSync } from 'fs';
+import { setupApiServer } from '@nnpp/setup';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,35 +16,28 @@ async function bootstrap() {
     credentials: true,
   });
 
-  app.setGlobalPrefix('api');
+  const appConfig = {
+    appName: 'MyApp',
+    appPort: 3000,
+    globalPrefix: 'api', // Ví dụ, API sẽ có tiền tố /api
+  };
 
-  // Định nghĩa cấu hình Swagger
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('Conduit APIs')
-    .setDescription('Conduit API description')
-    .setVersion('1.0')
-    .addBearerAuth() // Nếu API cần xác thực
-    .addServer('http://localhost:3000') // Đảm bảo URL cho Swagger
-    .build();
+  const swaggerConfig = {
+    title: 'My API',
+    description: 'Description of my API',
+    version: '1.0',
+  };
 
-  // Tạo tài liệu Swagger
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-
-  // Thiết lập Swagger UI tại /api/docs
-  SwaggerModule.setup('/api/docs', app, swaggerDocument);
-
-  // Ghi file Swagger (tuỳ chọn)
-  writeFileSync('./swagger.json', JSON.stringify(swaggerDocument, null, 2));
-
-  // Lấy cổng từ config hoặc mặc định
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('APP_PORT') || 4000;
-  // Chỉ gọi app.listen() một lần duy nhất
-  await app.listen(port, () => {
-    console.log(`Application is running on: http://localhost:${port}`);
+  // Sử dụng setupApiServer để cấu hình và khởi động ứng dụng
+  await setupApiServer({
+    app,
+    appConfig,
+    swaggerConfig,
   });
+
+  console.log(
+    `Application is running on: http://localhost:${appConfig.appPort}`,
+  );
 }
 
 bootstrap();
-
-
