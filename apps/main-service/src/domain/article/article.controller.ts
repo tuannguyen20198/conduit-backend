@@ -33,16 +33,18 @@ export class ArticleController {
   @Get('articles')
   @ApiResponse({ type: ArticleResponseDto }) // ✅ Định nghĩa kiểu trả về cho Swagger
   async getArticles(
-    @Pagination() pagination: PaginationParams, // Xử lý phân trang
+    @Pagination() pagination: PaginationParams,
     @Query('tag') tag?: string,
     @Query('author') author?: string,
     @Query('favorited') favorited?: string,
   ) {
+    const { limit, offset } = pagination; // Giải cấu trúc pagination
+
     return this.articleService.getArticles({
       tag,
       author,
       favorited,
-      pagination,
+      pagination: { limit, offset }, // Đảm bảo kiểu dữ liệu khớp
     });
   }
 

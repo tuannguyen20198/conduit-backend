@@ -10,10 +10,10 @@ async function bootstrap() {
 
   // Enable CORS một lần duy nhất
   app.enableCors({
-    origin: '*',
+    origin: 'http://localhost:5173', // 🎯 Đặt cụ thể domain của frontend
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
-    credentials: true,
+    credentials: true, // ✅ Cho phép gửi cookie/token qua request
   });
 
   const appConfig = {
