@@ -24,52 +24,46 @@ export class ArticleService {
   }) {
     const { limit, offset } = pagination;
 
-    // Đảm bảo offset không âm
-    const validOffset = offset && offset >= 0 ? offset : 0;
-    console.log(`Fetching articles with limit=${limit}, offset=${validOffset}`);
-
     const where: any = {};
 
     if (tag) {
       where.tagList = {
-        some: { name: { in: tag.split(',') } },
+        some: {
+          name: {
+            in: tag.split(','), // Tìm bài viết chứa ÍT NHẤT 1 tag trong danh sách
+          },
+        },
       };
     }
     if (author) {
       where.author = { username: author };
     }
+
     if (favorited) {
       where.favoritedBy = { some: { username: favorited } };
     }
 
-    console.log('WHERE condition:', JSON.stringify(where, null, 2));
-
-    // Truy vấn danh sách bài viết
-    const [articles, articlesCount] = await Promise.all([
-      this.databaseServices.article.findMany({
-        where,
-        include: {
-          author: {
-            select: {
-              username: true,
-              bio: true,
-              image: true,
-            },
+    const articles = await this.databaseServices.article.findMany({
+      where,
+      include: {
+        author: {
+          select: {
+            username: true,
+            bio: true,
+            image: true,
           },
-          tagList: { select: { name: true } },
-          favoritedBy: true,
         },
-        take: limit,
-        skip: validOffset,
-        orderBy: { createdAt: 'desc' },
-      }),
-      this.databaseServices.article.count({ where }), // Tổng số bài viết
-    ]);
-
-    console.log(
-      `Returned ${articles.length} articles of total ${articlesCount}`,
-    );
-
+        tagList: {
+          select: {
+            name: true, // Lấy danh sách tag của bài viết
+          },
+        },
+        favoritedBy: true,
+      },
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' },
+    });
     return {
       articles: articles.map((article) => ({
         slug: article.slug,
@@ -83,15 +77,14 @@ export class ArticleService {
           username: article.author.username,
           bio: article.author.bio,
           image: article.author.image,
-          following: false, // Cập nhật nếu cần
+          following: false, // Cần cập nhật theo trạng thái của người dùng hiện tại
         },
-        favorited: false, // Cập nhật nếu cần
+        favorited: false, // Cần cập nhật theo user đăng nhập
         favoritesCount: article.favoritedBy.length,
       })),
-      articlesCount, // Tổng số bài viết phù hợp với điều kiện lọc
+      articlesCount: await this.databaseServices.article.count({ where }),
     };
   }
-
   // Lấy danh sách tác giả viết về 1 tag
 
   async getFeedArticles(userId: number, limit = 20, offset = 0) {

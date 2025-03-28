@@ -24,27 +24,29 @@ import { AuthGuard } from '../guards/auth.guard';
 import { Identity } from '@nnpp/decorators/identity.decorator';
 import { Public } from '@nnpp/decorators';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { DatabaseService } from '@nnpp/database';
 
 @Controller()
 export class ArticleController {
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(
+    private readonly articleService: ArticleService,
+    private databseServices: DatabaseService,
+  ) {}
 
   @Public()
   @Get('articles')
   @ApiResponse({ type: ArticleResponseDto }) // ✅ Định nghĩa kiểu trả về cho Swagger
   async getArticles(
-    @Pagination() pagination: PaginationParams,
+    @Pagination() pagination: PaginationParams = { limit: 10, offset: 0 }, // Giá trị mặc định
     @Query('tag') tag?: string,
     @Query('author') author?: string,
     @Query('favorited') favorited?: string,
   ) {
-    const { limit, offset } = pagination; // Giải cấu trúc pagination
-
     return this.articleService.getArticles({
       tag,
       author,
       favorited,
-      pagination: { limit, offset }, // Đảm bảo kiểu dữ liệu khớp
+      pagination: pagination || { limit: 10, offset: 0 }, // Đảm bảo pagination không undefined
     });
   }
 
