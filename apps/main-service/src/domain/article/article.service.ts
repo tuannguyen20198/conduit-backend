@@ -100,13 +100,36 @@ export class ArticleService {
 
     const followingIds = currentUser.following.map((user) => user.id);
 
-    // Lấy danh sách bài viết của những người user đang follow
+    // Lấy danh sách bài viết của những người user đang follow hoặc đã like
     const articles = await this.databaseServices.article.findMany({
-      where: { authorId: { in: followingIds } },
+      where: {
+        OR: [
+          { authorId: { in: followingIds } }, // Bài viết của user bạn follow
+          { favoritedBy: { some: { id: userId } } }, // Bài viết bạn đã like
+        ],
+      },
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
-      include: { author: true, favoritedBy: true },
+      include: {
+        author: {
+          select: {
+            username: true,
+            bio: true,
+            image: true,
+          },
+        },
+        favoritedBy: {
+          select: {
+            id: true,
+          },
+        },
+        tagList: {
+          select: {
+            name: true, // ✅ Đảm bảo lấy danh sách tag
+          },
+        },
+      },
     });
 
     return {
@@ -117,7 +140,10 @@ export class ArticleService {
         body: article.body,
         createdAt: article.createdAt,
         updatedAt: article.updatedAt,
-        tagList: [], // Cần sửa nếu bạn có model Tag
+        tagList:
+          article.tagList.length > 0
+            ? article.tagList.map((tag) => tag.name)
+            : [], // ✅ Kiểm tra nếu rỗng
         favorited: article.favoritedBy.some((user) => user.id === userId),
         favoritesCount: article.favoritedBy.length,
         author: {

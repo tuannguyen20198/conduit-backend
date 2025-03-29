@@ -88,7 +88,7 @@ export class ArticleController {
     return this.articleService.deleteArticle(slug, user.id);
   }
 
-  @Get('/articles/feed')
+  @Get('feed')
   @UseGuards(AuthGuard) // Yêu cầu authentication
   async getFeedArticles(
     @Identity() user,
