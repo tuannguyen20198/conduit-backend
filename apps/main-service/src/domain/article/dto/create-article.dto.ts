@@ -1,18 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateProfileDto } from '../../profile/dto/create-profile.dto';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateArticleDto {
-  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   title: string;
 
-  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   description: string;
 
-  @ApiProperty()
+  @IsString()
+  @IsNotEmpty()
   body: string;
 
-  @ApiProperty({ type: [String] })
-  tagList: string[];
+  @IsArray()
+  @IsOptional()
+  tagList?: string[];
 }
 
 export class ArticleResponseDto {
@@ -45,5 +50,4 @@ export class ArticleResponseDto {
 
   @ApiProperty({ type: () => CreateProfileDto })
   author: CreateProfileDto;
-  
 }

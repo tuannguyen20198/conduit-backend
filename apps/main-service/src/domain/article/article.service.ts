@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -7,6 +8,7 @@ import { DatabaseService } from '@nnpp/database';
 import { CreateArticleDto } from './dto/create-article.dto';
 import slugify from 'slugify';
 import { UpdateArticleDto } from './dto/update-article.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ArticleService {
@@ -205,6 +207,15 @@ export class ArticleService {
   }
 
   async createArticle(dto: CreateArticleDto, userId: number) {
+    if (!dto.title || !dto.description || !dto.body) {
+      throw new Error('Missing required fields: title, description, or body.');
+    }
+
+    if (Number(userId) <= 0) {
+      // Kiểm tra ID hợp lệ
+      throw new Error('User ID không hợp lệ.');
+    }
+
     const slug = slugify(dto.title, { lower: true });
 
     const article = await this.databaseServices.article.create({
@@ -213,7 +224,7 @@ export class ArticleService {
         title: dto.title,
         description: dto.description,
         body: dto.body,
-        authorId: userId,
+        authorId: Number(userId), // Chắc chắn userId là number
         tagList: {
           connectOrCreate:
             dto.tagList?.map((tag) => ({
@@ -225,23 +236,24 @@ export class ArticleService {
       include: {
         author: {
           include: {
-            followedBy: true, // Để kiểm tra "following"
+            followedBy: true,
           },
         },
-        favoritedBy: true, // Để kiểm tra "favorited"
+        favoritedBy: true,
         tagList: true,
       },
     });
+
     return {
       article: {
         slug: article.slug,
         title: article.title,
         description: article.description,
         body: article.body,
-        tagList: article.tagList.map((tag) => tag.name), // Chuyển tag từ object -> array
+        tagList: article.tagList.map((tag) => tag.name),
         createdAt: article.createdAt,
         updatedAt: article.updatedAt,
-        favorited: false, // Mặc định là chưa favorited
+        favorited: false,
         favoritesCount: article.favoritedBy.length,
         author: {
           username: article.author.username,
@@ -249,7 +261,7 @@ export class ArticleService {
           image:
             article.author.image ||
             'https://api.realworld.io/images/smiley-cyrus.jpeg',
-          following: false, // Mặc định là false khi tạo bài viết
+          following: false,
         },
       },
     };
