@@ -38,7 +38,7 @@ CREATE TABLE "User" (
     "email" TEXT NOT NULL,
     "username" TEXT NOT NULL,
     "password" TEXT NOT NULL,
-    "image" TEXT DEFAULT 'https://api.realworld.io/images/smiley-cyrus.jpeg',
+    "image" TEXT DEFAULT 'https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg',
     "bio" TEXT,
     "demo" BOOLEAN NOT NULL DEFAULT false,
 

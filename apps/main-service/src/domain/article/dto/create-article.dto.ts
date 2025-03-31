@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { CreateProfileDto } from '../../profile/dto/create-profile.dto';
-import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateArticleDto {
   @IsString()
@@ -15,9 +21,9 @@ export class CreateArticleDto {
   @IsNotEmpty()
   body: string;
 
-  @IsArray()
-  @IsOptional()
-  tagList?: string[];
+  @IsArray({ message: 'tagList must be an array' })
+  @IsNotEmpty({ message: 'Tag list cannot be empty' })
+  tagList: string[];
 }
 
 export class ArticleResponseDto {

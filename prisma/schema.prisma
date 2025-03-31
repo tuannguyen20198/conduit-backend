@@ -50,7 +50,7 @@ model User {
   email      String    @unique
   username   String    @unique
   password   String
-  image      String?   @default("https://api.realworld.io/images/smiley-cyrus.jpeg")
+  image      String?   @default("https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg")
   bio        String?
   articles   Article[] @relation("UserArticles")
   favorites  Article[] @relation("UserFavorites")

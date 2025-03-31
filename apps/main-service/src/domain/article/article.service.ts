@@ -1,6 +1,8 @@
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -197,7 +199,7 @@ export class ArticleService {
           bio: article.author.bio,
           image:
             article.author.image ||
-            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+            'https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg',
           following: article.author.followedBy.some(
             (follower) => follower.id === currentUserId,
           ),
@@ -208,63 +210,89 @@ export class ArticleService {
 
   async createArticle(dto: CreateArticleDto, userId: number) {
     if (!dto.title || !dto.description || !dto.body) {
-      throw new Error('Missing required fields: title, description, or body.');
+      throw new HttpException(
+        { message: 'Missing required fields: title, description, or body.' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (Number(userId) <= 0) {
-      // Kiểm tra ID hợp lệ
-      throw new Error('User ID không hợp lệ.');
+      throw new HttpException(
+        { message: 'User ID không hợp lệ.' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const slug = slugify(dto.title, { lower: true });
 
-    const article = await this.databaseServices.article.create({
-      data: {
-        slug,
-        title: dto.title,
-        description: dto.description,
-        body: dto.body,
-        authorId: Number(userId), // Chắc chắn userId là number
-        tagList: {
-          connectOrCreate:
-            dto.tagList?.map((tag) => ({
-              where: { name: tag },
-              create: { name: tag },
-            })) || [],
-        },
-      },
-      include: {
-        author: {
-          include: {
-            followedBy: true,
-          },
-        },
-        favoritedBy: true,
-        tagList: true,
-      },
+    // Kiểm tra slug có tồn tại không
+    const existingArticle = await this.databaseServices.article.findUnique({
+      where: { slug },
     });
 
-    return {
-      article: {
-        slug: article.slug,
-        title: article.title,
-        description: article.description,
-        body: article.body,
-        tagList: article.tagList.map((tag) => tag.name),
-        createdAt: article.createdAt,
-        updatedAt: article.updatedAt,
-        favorited: false,
-        favoritesCount: article.favoritedBy.length,
-        author: {
-          username: article.author.username,
-          bio: article.author.bio,
-          image:
-            article.author.image ||
-            'https://api.realworld.io/images/smiley-cyrus.jpeg',
-          following: false,
+    if (existingArticle) {
+      throw new HttpException(
+        { message: 'Slug already exists. Please choose a different title.' },
+        HttpStatus.CONFLICT, // 409 Conflict
+      );
+    }
+
+    try {
+      const article = await this.databaseServices.article.create({
+        data: {
+          slug,
+          title: dto.title,
+          description: dto.description,
+          body: dto.body,
+          authorId: Number(userId),
+          tagList: {
+            connectOrCreate:
+              dto.tagList?.map((tag) => ({
+                where: { name: tag },
+                create: { name: tag },
+              })) || [],
+          },
         },
-      },
-    };
+        include: {
+          author: {
+            include: {
+              followedBy: true,
+            },
+          },
+          favoritedBy: true,
+          tagList: true,
+        },
+      });
+
+      return {
+        article: {
+          slug: article.slug,
+          title: article.title,
+          description: article.description,
+          body: article.body,
+          tagList: article.tagList.map((tag) => tag.name),
+          createdAt: article.createdAt,
+          updatedAt: article.updatedAt,
+          favorited: false,
+          favoritesCount: article.favoritedBy.length,
+          author: {
+            username: article.author.username,
+            bio: article.author.bio,
+            image:
+              article.author.image ||
+              'https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg',
+            following: false,
+          },
+        },
+      };
+    } catch (error) {
+      console.error('Error creating article:', error);
+
+      throw new HttpException(
+        { message: 'Failed to create article.' },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   async updateArticle(slug: string, dto: UpdateArticleDto, userId: number) {
@@ -333,7 +361,7 @@ export class ArticleService {
           bio: updatedArticle.author.bio,
           image:
             updatedArticle.author.image ||
-            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+            'https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg',
           following: false, // Mặc định là false khi cập nhật bài viết
         },
       },
@@ -403,7 +431,7 @@ export class ArticleService {
           bio: comment.author.bio,
           image:
             comment.author.image ||
-            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+            'https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg',
           following: false, // Cần cập nhật nếu có chức năng follow
         },
       },
@@ -447,7 +475,7 @@ export class ArticleService {
           bio: comment.author.bio,
           image:
             comment.author.image ||
-            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+            'https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg',
           following: false, // Có thể cập nhật sau nếu có chức năng follow
         },
       })),
@@ -524,7 +552,7 @@ export class ArticleService {
           bio: article.author.bio,
           image:
             article.author.image ||
-            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+            'https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg',
           following: false, // Cần cập nhật nếu có chức năng follow
         },
       },
@@ -569,7 +597,7 @@ export class ArticleService {
           bio: article.author.bio,
           image:
             article.author.image ||
-            'https://api.realworld.io/images/smiley-cyrus.jpeg',
+            'https://static.vecteezy.com/system/resources/previews/002/608/327/non_2x/mobile-application-avatar-web-button-menu-digital-silhouette-style-icon-free-vector.jpg',
           following: false, // Cập nhật theo logic follow
         },
       },
