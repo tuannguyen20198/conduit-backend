@@ -1,0 +1,8 @@
+import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-runtime";
+import { useAuth } from "@/context/AuthContext";
+import { Link } from "react-router-dom";
+const Header = () => {
+    const { user, logout } = useAuth();
+    return (_jsx("nav", { className: "navbar navbar-light", children: _jsxs("div", { className: "container", children: [_jsx(Link, { to: "/", className: "navbar-brand", children: "Conduit" }), _jsxs("ul", { className: "nav navbar-nav pull-xs-right", children: [_jsx("li", { className: "nav-item", children: _jsx(Link, { to: "/", className: "nav-link", children: "Home" }) }), !user ? (_jsxs(_Fragment, { children: [_jsx("li", { className: "nav-item", children: _jsx(Link, { to: "/login", className: "nav-link", children: "Sign in" }) }), _jsx("li", { className: "nav-item", children: _jsx(Link, { to: "/register", className: "nav-link", children: "Sign up" }) })] })) : (_jsxs(_Fragment, { children: [_jsx("li", { className: "nav-item", children: _jsxs(Link, { to: "/editor", className: "nav-link", children: [_jsx("i", { className: "ion-compose" }), " New Post"] }) }), _jsx("li", { className: "nav-item", children: _jsxs(Link, { to: "/settings", className: "nav-link", children: [_jsx("i", { className: "ion-gear-a" }), " Settings"] }) }), _jsx("li", { className: "nav-item", children: _jsxs("button", { className: "nav-link btn btn-link", onClick: logout, children: [_jsx("i", { className: "ion-log-out" }), " Logout"] }) }), _jsx("li", { className: "nav-item", children: _jsxs(Link, { to: `/profile/${user.username}`, className: "nav-link", children: [_jsx("img", { src: user?.image || "", className: "user-pic" }), user?.username] }) })] }))] })] }) }));
+};
+export default Header;
