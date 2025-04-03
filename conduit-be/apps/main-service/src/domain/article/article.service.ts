@@ -92,59 +92,87 @@ export class ArticleService {
   // Lấy danh sách tác giả viết về 1 tag
 
   async getFeedArticles(userId: number, limit: number, offset: number) {
-    // Lấy thông tin người dùng và các người mà họ đang theo dõi
+    // Fetch user and their following list, including users they follow
     const user = await this.databaseServices.user.findUnique({
       where: { id: userId },
-      include: { following: true }, // Lấy danh sách người dùng mà họ đang theo dõi
+      include: { following: true }, // Get users the current user is following
     });
 
     if (!user) {
       throw new Error('User not found');
     }
 
-    console.log('User following:', user.following); // Kiểm tra xem người dùng đang theo dõi ai
-
-    // Lấy các user mà người dùng đang theo dõi
+    // Get list of usernames the user is following
     const followingUsers = user.following;
 
+    // If the user isn't following anyone, return an empty feed
     if (followingUsers.length === 0) {
-      return { articles: [], articlesCount: 0 }; // Không có ai để theo dõi
+      return { articles: [], articlesCount: 0 };
     }
 
-    // Log danh sách các username mà người dùng đang theo dõi
     const followingUsernames = followingUsers.map(
       (followedUser) => followedUser.username,
     );
-    console.log('Following usernames:', followingUsernames);
 
-    // Truy vấn các bài viết từ những người dùng mà người dùng đang theo dõi
+    // Query articles from users the current user is following
     const articles = await this.databaseServices.article.findMany({
       where: {
         author: {
           username: {
-            in: followingUsernames, // Lọc theo các username mà người dùng đang theo dõi
+            in: followingUsernames, // Filter by followed users
           },
         },
       },
-      skip: offset, // Phân trang - bỏ qua số lượng bài viết đã lấy
-      take: limit, // Lấy số lượng bài viết giới hạn
+      skip: offset, // Pagination: offset the articles
+      take: limit, // Pagination: limit the number of articles
       orderBy: {
-        createdAt: 'desc', // Sắp xếp theo thời gian tạo bài viết giảm dần
+        createdAt: 'desc', // Sort articles by most recent first
       },
       include: {
-        author: true, // Bao gồm thông tin tác giả (nếu cần)
+        author: true, // Include author details if needed
+        tagList: true, // Include tagList to resolve the error
+        favoritedBy: true, // Include favoritedBy to resolve the error
       },
     });
 
-    console.log('Fetched articles:', articles); // Log các bài viết đã lấy được
-
+    // If no articles are found, return empty response
     if (articles.length === 0) {
-      return { articles: [], articlesCount: 0 }; // Không có bài viết thỏa mãn điều kiện
+      return { articles: [], articlesCount: 0 };
     }
 
-    const articlesCount = articles.length; // Đếm số lượng bài viết lấy được
+    // Count the total number of articles across all pages
+    const totalArticlesCount = await this.databaseServices.article.count({
+      where: {
+        author: {
+          username: {
+            in: followingUsernames, // Filter by followed users
+          },
+        },
+      },
+    });
 
-    return { articles, articlesCount }; // Trả về bài viết và số lượng bài viết
+    // Map articles to match the output structure
+    const formattedArticles = articles.map((article) => ({
+      slug: article.slug,
+      title: article.title,
+      description: article.description,
+      tagList: article.tagList?.map((tag) => tag.name) || [], // Correctly map tagList to an array of tag names
+      createdAt: article.createdAt,
+      updatedAt: article.updatedAt,
+      favorited: article.favoritedBy.some((user) => user.id === userId), // Calculate based on favoritedBy
+      favoritesCount: article.favoritedBy.length, // Calculate favorites count based on favoritedBy array
+      author: {
+        username: article.author.username,
+        bio: article.author.bio,
+        image: article.author.image,
+        following: user.following.some((f) => f.id === article.authorId), // Check if current user is following the author
+      },
+    }));
+
+    return {
+      articles: formattedArticles,
+      articlesCount: totalArticlesCount, // Return total count of articles
+    };
   }
 
   async getArticleBySlug(slug: string, currentUserId?: number) {
