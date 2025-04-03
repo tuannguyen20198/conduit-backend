@@ -91,76 +91,60 @@ export class ArticleService {
   }
   // Lấy danh sách tác giả viết về 1 tag
 
-  async getFeedArticles(userId: number, limit = 20, offset = 0) {
-    // Lấy danh sách user mà currentUser đang follow
-    const currentUser = await this.databaseServices.user.findUnique({
+  async getFeedArticles(userId: number, limit: number, offset: number) {
+    // Lấy thông tin người dùng và các người mà họ đang theo dõi
+    const user = await this.databaseServices.user.findUnique({
       where: { id: userId },
-      include: { following: true },
+      include: { following: true }, // Lấy danh sách người dùng mà họ đang theo dõi
     });
 
-    if (!currentUser) {
-      throw new NotFoundException('User not found');
+    if (!user) {
+      throw new Error('User not found');
     }
 
-    const followingIds = currentUser.following.map((user) => user.id);
+    console.log('User following:', user.following); // Kiểm tra xem người dùng đang theo dõi ai
 
-    // Lấy danh sách bài viết của những người user đang follow hoặc đã like
+    // Lấy các user mà người dùng đang theo dõi
+    const followingUsers = user.following;
+
+    if (followingUsers.length === 0) {
+      return { articles: [], articlesCount: 0 }; // Không có ai để theo dõi
+    }
+
+    // Log danh sách các username mà người dùng đang theo dõi
+    const followingUsernames = followingUsers.map(
+      (followedUser) => followedUser.username,
+    );
+    console.log('Following usernames:', followingUsernames);
+
+    // Truy vấn các bài viết từ những người dùng mà người dùng đang theo dõi
     const articles = await this.databaseServices.article.findMany({
       where: {
-        OR: [
-          { authorId: { in: followingIds } }, // Bài viết của user bạn follow
-          { favoritedBy: { some: { id: userId } } }, // Bài viết bạn đã like
-        ],
-      },
-      orderBy: { createdAt: 'desc' },
-      take: limit,
-      skip: offset,
-      include: {
         author: {
-          select: {
-            username: true,
-            bio: true,
-            image: true,
+          username: {
+            in: followingUsernames, // Lọc theo các username mà người dùng đang theo dõi
           },
         },
-        favoritedBy: {
-          select: {
-            id: true,
-          },
-        },
-        tagList: {
-          select: {
-            name: true, // ✅ Đảm bảo lấy danh sách tag
-          },
-        },
+      },
+      skip: offset, // Phân trang - bỏ qua số lượng bài viết đã lấy
+      take: limit, // Lấy số lượng bài viết giới hạn
+      orderBy: {
+        createdAt: 'desc', // Sắp xếp theo thời gian tạo bài viết giảm dần
+      },
+      include: {
+        author: true, // Bao gồm thông tin tác giả (nếu cần)
       },
     });
 
-    return {
-      articles: articles.map((article) => ({
-        slug: article.slug,
-        title: article.title,
-        description: article.description,
-        body: article.body,
-        createdAt: article.createdAt,
-        updatedAt: article.updatedAt,
-        tagList:
-          article.tagList.length > 0
-            ? article.tagList.map((tag) => tag.name)
-            : [], // ✅ Kiểm tra nếu rỗng
-        favorited: article.favoritedBy.some((user) => user.id === userId),
-        favoritesCount: article.favoritedBy.length,
-        author: {
-          username: article.author.username,
-          bio: article.author.bio,
-          image: article.author.image,
-          following: currentUser.following.some(
-            (user) => user.id === article.authorId,
-          ),
-        },
-      })),
-      articlesCount: articles.length,
-    };
+    console.log('Fetched articles:', articles); // Log các bài viết đã lấy được
+
+    if (articles.length === 0) {
+      return { articles: [], articlesCount: 0 }; // Không có bài viết thỏa mãn điều kiện
+    }
+
+    const articlesCount = articles.length; // Đếm số lượng bài viết lấy được
+
+    return { articles, articlesCount }; // Trả về bài viết và số lượng bài viết
   }
 
   async getArticleBySlug(slug: string, currentUserId?: number) {

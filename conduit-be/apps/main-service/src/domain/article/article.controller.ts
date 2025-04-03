@@ -88,17 +88,18 @@ export class ArticleController {
     return this.articleService.deleteArticle(slug, user.id);
   }
 
-  @Get('feed')
+  @Post('/articles/feed')
   @UseGuards(AuthGuard) // Yêu cầu authentication
   async getFeedArticles(
-    @Identity() user,
-    @Pagination() pagination: PaginationParams,
+    @Identity() user, // Lấy thông tin người dùng từ JWT
+    @Pagination() pagination: PaginationParams, // Lấy các tham số phân trang (limit, offset)
   ) {
-    const userId = user.id; // Lấy userId từ JWT token
+    const userId = user.id; // Lấy userId từ thông tin người dùng trong JWT
+    const { limit, offset } = pagination; // Lấy limit và offset từ query params
     return this.articleService.getFeedArticles(
-      userId,
-      pagination.limit,
-      pagination.offset,
+      userId, // Truyền userId vào service
+      limit, // Truyền limit
+      offset, // Truyền offset
     );
   }
 
