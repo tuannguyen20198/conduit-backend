@@ -96,3 +96,19 @@ textarea {
   background: white;
   border: none !important;
 }
+/* Thêm padding và margin cho input và textarea */
+.form-control {
+  padding: 12px;
+  margin-bottom: 16px;
+  white-space: normal; /* Đảm bảo văn bản xuống dòng */
+}
+
+textarea.form-control {
+  min-height: 100px;
+}
+
+.mdx-editor {
+  padding: 12px;
+  min-height: 200px; /* Đảm bảo editor có chiều cao tối thiểu */
+  white-space: normal; /* Đảm bảo văn bản có thể cách nhau */
+}

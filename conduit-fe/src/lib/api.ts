@@ -102,10 +102,13 @@ export const getTags = async () => {
 
 export const getArticleBySlug = async (slug: string) => {
   try {
-    const { data } = await api.get(`/articles/${slug}`);
-    return data;
+    const response = await api.get(`/articles/${slug}`);
+    const data = response.data.article.article;
+    console.log(data);
+    return data; // Trả về dữ liệu bài viết
   } catch (error) {
-    handleAPIError(error);
+    console.error("Error fetching article", error);
+    throw error; // Ném lỗi nếu không lấy được dữ liệu
   }
 };
 
@@ -164,6 +167,26 @@ export const getProfile = async (username: string) => {
   try {
     const { data } = await api.get(`/profiles/${username}`); // API trả về { profile: { id, email, username, ... } }
     return data.profile;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateArticle = async (slug: string, article: any) => {
+  try {
+    // Gửi API yêu cầu cập nhật bài viết với cấu trúc đúng `{ article: { ... } }`
+    const { data } = await api.put(`/articles/${slug}`, { article }); // Truyền { article: article }
+
+    return data; // Trả về dữ liệu bài viết sau khi được cập nhật
+  } catch (error) {
+    throw error; // Nếu có lỗi, throw lỗi để xử lý
+  }
+};
+
+export const deleteArticle = async (slug: string) => {
+  try {
+    const { data } = await api.delete(`/articles/${slug}`); // Gửi API yêu cầu xóa bài viết
+    return data; // Trả về dữ liệu bài viết sau khi được xóa
   } catch (error) {
     throw error;
   }

@@ -100,9 +100,9 @@ const Feed: React.FC = () => {
                       <img src={article.author.image} alt={article.author.username} />
                     </Link>
                     <div className="info">
-                      <Link to={`/profile/${article.author.username}`} className="author">
+                      <p className="author">
                         {article.author.username}
-                      </Link>
+                      </p>
                       <span className="date">{new Date(article.createdAt).toDateString()}</span>
                     </div>
                     <button

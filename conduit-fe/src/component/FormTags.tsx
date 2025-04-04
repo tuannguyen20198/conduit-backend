@@ -1,9 +1,16 @@
 import { FormTagsProps } from "@/interfaces/article";
 import { useEffect, useState } from "react";
 
-const FormTags = ({ onTagsChange, setError, clearErrors }: FormTagsProps) => {
+const FormTags = ({ onTagsChange, setError, clearErrors, defaultTags }: FormTagsProps) => {
   const [tags, setTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
+
+  // Cập nhật tags khi component mount hoặc khi defaultTags thay đổi
+  useEffect(() => {
+    if (defaultTags && defaultTags.length > 0) {
+      setTags(defaultTags);
+    }
+  }, [defaultTags]);
 
   const addTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && inputValue.trim()) {
@@ -71,8 +78,6 @@ const FormTags = ({ onTagsChange, setError, clearErrors }: FormTagsProps) => {
       )}
     </div>
   );
-  
-  
 };
 
 export default FormTags;
