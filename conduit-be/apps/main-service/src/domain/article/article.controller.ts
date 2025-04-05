@@ -59,13 +59,14 @@ export class ArticleController {
     return this.articleService.createArticle(createArticleDto, user.id);
   }
 
-  @Public()
-  @Get('/articles/:slug')
+  @Post('/articles/:slug')
   async getArticleBySlug(@Param('slug') slug: string) {
     const article = await this.articleService.getArticleBySlug(slug);
+
     if (!article) {
       throw new NotFoundException('Article not found');
     }
+
     return { article };
   }
 
@@ -88,7 +89,7 @@ export class ArticleController {
     return this.articleService.deleteArticle(slug, user.id);
   }
 
-  @Post('/articles/feed')
+  @Get('/articles/feed')
   @UseGuards(AuthGuard) // Yêu cầu authentication
   async getFeedArticles(
     @Identity() user, // Lấy thông tin người dùng từ JWT
