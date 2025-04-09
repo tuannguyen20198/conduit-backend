@@ -318,7 +318,6 @@ export class ArticleService {
         tagList: true,
       },
     });
-
     if (!article) {
       throw new NotFoundException('Article not found');
     }
